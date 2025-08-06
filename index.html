@@ -3,65 +3,845 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 프로필</title>
+    <title>천공의 눈물 - 2D 점프맵 게임</title>
     <style>
-        /* 간단한 스타일링 */
-        body { font-family: sans-serif; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background-color: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 30px; max-width: 400px; text-align: center; }
-        h1 { color: #1877f2; }
-        p { line-height: 1.6; }
-        .guestbook { margin-top: 20px; text-align: left; }
-        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { background-color: #1877f2; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #87ceeb 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 메인 메뉴 화면 */
+        .main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0f0f23 0%, #1a1a3a 50%, #2d2d5f 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #87ceeb;
+            text-shadow: 0 0 20px rgba(135, 206, 235, 0.5);
+            margin-bottom: 1rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b8c6db;
+            margin-bottom: 3rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .difficulty-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .difficulty-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 300px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .difficulty-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .difficulty-btn:hover::before {
+            left: 100%;
+        }
+        
+        .easy {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .normal {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+        
+        .hard {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+        
+        .hardcore {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+        
+        .difficulty-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        /* 게임 화면 */
+        .game-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #87ceeb 0%, #98d8e8 50%, #b8e6b8 100%);
+            display: none;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .lives {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .progress {
+            font-size: 1rem;
+        }
+        
+        .game-world {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* 플레이어 캐릭터 */
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 20px 20px 10px 10px;
+            bottom: 100px;
+            left: 100px;
+            transition: all 0.1s ease;
+            z-index: 50;
+        }
+        
+        .player::before {
+            content: '👧';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+        }
+        
+        .player::after {
+            content: '🦋';
+            position: absolute;
+            top: 10px;
+            right: -15px;
+            font-size: 20px;
+            animation: flutter 0.5s ease-in-out infinite alternate;
+        }
+        
+        /* 플랫폼들 */
+        .platform {
+            position: absolute;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .platform.moving {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .platform.disappearing {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .platform.cloud {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            border-radius: 50px;
+        }
+        
+        /* 목표 지점 */
+        .goal {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-radius: 30px;
+            top: 50px;
+            right: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: goalGlow 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 30px rgba(255, 234, 167, 0.6);
+        }
+        
+        .goal::before {
+            content: '💎';
+        }
+        
+        /* 장애물 */
+        .obstacle {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+        
+        .obstacle::before {
+            content: '⚡';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+        }
+        
+        /* 게임 오버 화면 */
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            color: white;
+        }
+        
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ff6b6b;
+        }
+        
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .restart-btn {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 승리 화면 */
+        .victory {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            color: white;
+            text-align: center;
+        }
+        
+        .victory h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ffeaa7;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .victory p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+        
+        /* 애니메이션 */
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(135, 206, 235, 0.5); }
+            to { text-shadow: 0 0 30px rgba(135, 206, 235, 0.8), 0 0 40px rgba(135, 206, 235, 0.6); }
+        }
+        
+        @keyframes flutter {
+            from { transform: translateY(0px) rotate(-5deg); }
+            to { transform: translateY(-3px) rotate(5deg); }
+        }
+        
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+        
+        @keyframes goalGlow {
+            from { box-shadow: 0 0 30px rgba(255, 234, 167, 0.6); }
+            to { box-shadow: 0 0 50px rgba(255, 234, 167, 0.9), 0 0 70px rgba(255, 234, 167, 0.6); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 조작 안내 */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 0.9rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .difficulty-btn {
+                min-width: 250px;
+                font-size: 1rem;
+            }
+            
+            .player {
+                width: 35px;
+                height: 45px;
+            }
+            
+            .controls {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <!-- 이 부분을 수정하세요 -->
-        <h1>김수홍</h1>
-        <p>안녕하세요. <br>안녕하세요!</p>
-        <a href="https://github.com/사용자이름">My GitHub</a>
-        
-        <hr>
-        
-        <!-- 방명록 폼 (2단계에서 사용) -->
-        <div class="guestbook">
-            <h2>방명록</h2>
-            <form id="guestbook-form">
-                <input type="text" name="name" placeholder="이름" required>
-                <textarea name="message" placeholder="메시지를 남겨주세요..." required></textarea>
-                <button type="submit">남기기</button>
-            </form>
-            <p id="form-response" style="margin-top:10px;"></p>
+    <div class="game-container">
+        <!-- 메인 메뉴 -->
+        <div class="main-menu" id="mainMenu">
+            <h1 class="title">천공의 눈물</h1>
+            <p class="subtitle">
+                잃어버린 빛을 되찾기 위한 구름 위 아찔한 여정<br>
+                용감한 소녀 루나가 되어 천공의 섬을 향해 떠나세요
+            </p>
+            <div class="difficulty-menu">
+                <button class="difficulty-btn easy" onclick="startGame('easy')">
+                    <strong>🌟 쉬움</strong><br>
+                    2단 점프 가능 • 넉넉한 생명력 • 초보자 추천
+                </button>
+                <button class="difficulty-btn normal" onclick="startGame('normal')">
+                    <strong>⚡ 보통</strong><br>
+                    일반 점프 • 세이브 포인트 있음 • 적당한 도전
+                </button>
+                <button class="difficulty-btn hard" onclick="startGame('hard')">
+                    <strong>🔥 어려움</strong><br>
+                    세이브 포인트 적음 • 까다로운 장애물 • 숙련자용
+                </button>
+                <button class="difficulty-btn hardcore" onclick="startGame('hardcore')">
+                    <strong>💀 하드코어</strong><br>
+                    세이브 없음 • 한 번의 기회 • 극한의 도전
+                </button>
+            </div>
+        </div>
+
+        <!-- 게임 화면 -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-ui">
+                <div class="lives" id="lives">❤️ 생명력: 3</div>
+                <div class="progress" id="progress">진행도: 0%</div>
+            </div>
+            
+            <div class="controls">
+                <div>🎮 조작법: 스페이스바/클릭으로 점프, 화살표키/WASD로 이동</div>
+                <div>📱 모바일: 화면 터치로 점프</div>
+            </div>
+            
+            <div class="game-world" id="gameWorld">
+                <!-- 플레이어 -->
+                <div class="player" id="player"></div>
+                
+                <!-- 간소화된 플랫폼들 -->
+                <div class="platform" style="width: 200px; height: 20px; bottom: 80px; left: 50px;"></div>
+                <div class="platform" style="width: 180px; height: 20px; bottom: 180px; left: 280px;"></div>
+                <div class="platform" style="width: 160px; height: 20px; bottom: 280px; left: 500px;"></div>
+                <div class="platform" style="width: 140px; height: 20px; bottom: 380px; left: 720px;"></div>
+                <div class="platform" style="width: 120px; height: 20px; bottom: 480px; left: 900px;"></div>
+                
+                <!-- 장애물 -->
+                <div class="obstacle" style="bottom: 220px; left: 400px;"></div>
+                
+                <!-- 목표 지점 -->
+                <div class="goal" id="goal" style="bottom: 520px; left: 1050px;"></div>
+            </div>
+        </div>
+
+        <!-- 게임 오버 화면 -->
+        <div class="game-over" id="gameOver">
+            <h2>💔 게임 오버</h2>
+            <p>루나가 떨어졌습니다...<br>다시 한번 도전해보세요!</p>
+            <button class="restart-btn" onclick="restartGame()">다시 시작</button>
+        </div>
+
+        <!-- 승리 화면 -->
+        <div class="victory" id="victory">
+            <h2>🎉 축하합니다!</h2>
+            <p>
+                루나가 천공의 눈물을 찾았습니다!<br>
+                아르테라에 다시 빛이 돌아올 것입니다.<br>
+                용감한 모험가여, 당신의 용기에 감사드립니다!
+            </p>
+            <button class="restart-btn" onclick="backToMenu()">메인 메뉴로</button>
         </div>
     </div>
 
     <script>
-        // 방명록 스크립트 (2단계에서 사용)
-        const form = document.getElementById('guestbook-form');
-        const formResponse = document.getElementById('form-response');
-        
-        // 여기에 Apps Script URL을 붙여넣으세요
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx78bQmv2QyGzdzqXL3y_WA_O_AYs6Eb7kL1p9VXeLIE_YCN0N4zCNJlrKPQIFx-uQzQw/exec';
+        // 게임 상태 변수들
+        let gameState = {
+            difficulty: 'normal',
+            lives: 3,
+            maxLives: 3,
+            progress: 0,
+            isPlaying: false,
+            canDoubleJump: false,
+            hasDoubleJumped: false,
+            playerX: 100,
+            playerY: 100,
+            velocityX: 0,
+            velocityY: 0,
+            isJumping: false,
+            onGround: true,
+            gravity: 0.8,
+            jumpPower: 15,
+            moveSpeed: 4,
+            gameSpeed: 3,
+            respawning: false
+        };
 
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            formResponse.textContent = '전송 중...';
-            const data = new FormData(form);
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                body: data
-            })
-            .then(res => res.text())
-            .then(data => {
-                formResponse.textContent = '메시지가 성공적으로 전송되었습니다!';
-                form.reset();
-                setTimeout(() => { formResponse.textContent = ''; }, 3000);
-            }).catch(error => {
-                formResponse.textContent = '오류가 발생했습니다. 다시 시도해주세요.';
-            });
+        // DOM 요소들
+        const mainMenu = document.getElementById('mainMenu');
+        const gameScreen = document.getElementById('gameScreen');
+        const gameOver = document.getElementById('gameOver');
+        const victory = document.getElementById('victory');
+        const player = document.getElementById('player');
+        const livesDisplay = document.getElementById('lives');
+        const progressDisplay = document.getElementById('progress');
+        const movingPlatform1 = document.getElementById('movingPlatform1');
+        const goal = document.getElementById('goal');
+
+        // 플랫폼 데이터 - 더 쉽고 빠른 클리어를 위해 간소화
+        const platforms = [
+            {x: 50, y: 80, width: 200, height: 20, type: 'normal'},
+            {x: 280, y: 180, width: 180, height: 20, type: 'normal'},
+            {x: 500, y: 280, width: 160, height: 20, type: 'normal'},
+            {x: 720, y: 380, width: 140, height: 20, type: 'normal'},
+            {x: 900, y: 480, width: 120, height: 20, type: 'normal'}
+        ];
+
+        // 장애물 데이터 - 개수 줄임
+        const obstacles = [
+            {x: 400, y: 220, width: 30, height: 30}
+        ];
+
+        // 게임 시작
+        function startGame(difficulty) {
+            gameState.difficulty = difficulty;
+            
+            // 난이도별 설정
+            switch(difficulty) {
+                case 'easy':
+                    gameState.lives = 5;
+                    gameState.maxLives = 5;
+                    gameState.canDoubleJump = true;
+                    gameState.jumpPower = 16;
+                    gameState.moveSpeed = 5;
+                    break;
+                case 'normal':
+                    gameState.lives = 3;
+                    gameState.maxLives = 3;
+                    gameState.canDoubleJump = false;
+                    gameState.jumpPower = 15;
+                    gameState.moveSpeed = 4;
+                    break;
+                case 'hard':
+                    gameState.lives = 2;
+                    gameState.maxLives = 2;
+                    gameState.canDoubleJump = false;
+                    gameState.jumpPower = 14;
+                    gameState.moveSpeed = 3;
+                    break;
+                case 'hardcore':
+                    gameState.lives = 1;
+                    gameState.maxLives = 1;
+                    gameState.canDoubleJump = false;
+                    gameState.jumpPower = 13;
+                    gameState.moveSpeed = 3;
+                    break;
+            }
+            
+            // 게임 초기화
+            gameState.isPlaying = true;
+            gameState.progress = 0;
+            gameState.playerX = 100;
+            gameState.playerY = 100;
+            gameState.velocityY = 0;
+            gameState.isJumping = false;
+            gameState.onGround = true;
+            gameState.hasDoubleJumped = false;
+            gameState.respawning = false;
+            
+            // 화면 전환
+            mainMenu.style.display = 'none';
+            gameScreen.style.display = 'block';
+            
+            updateUI();
+            gameLoop();
+        }
+
+        // 점프 함수
+        function jump() {
+            if (!gameState.isPlaying || gameState.respawning) return;
+            
+            if (gameState.onGround) {
+                // 첫 번째 점프 (땅에 있을 때만)
+                gameState.velocityY = -gameState.jumpPower;
+                gameState.isJumping = true;
+                gameState.onGround = false;
+                gameState.hasDoubleJumped = false;
+            } else if (gameState.canDoubleJump && !gameState.hasDoubleJumped) {
+                // 더블 점프 (쉬움 모드에서만)
+                gameState.velocityY = -gameState.jumpPower * 0.8;
+                gameState.hasDoubleJumped = true;
+            }
+        }
+
+        // 충돌 감지
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // 플랫폼 충돌 확인
+        function checkPlatformCollisions() {
+            const playerRect = {
+                x: gameState.playerX,
+                y: window.innerHeight - gameState.playerY - 50,
+                width: 40,
+                height: 50
+            };
+
+            gameState.onGround = false;
+
+            for (let platform of platforms) {
+                const platformRect = {
+                    x: platform.x,
+                    y: window.innerHeight - platform.y - platform.height,
+                    width: platform.width,
+                    height: platform.height
+                };
+
+                if (checkCollision(playerRect, platformRect) && gameState.velocityY > 0) {
+                    // 플레이어가 플랫폼 위에 착지
+                    if (playerRect.y + playerRect.height - 10 <= platformRect.y) {
+                        gameState.playerY = platform.y + platform.height;
+                        gameState.velocityY = 0;
+                        gameState.isJumping = false;
+                        gameState.onGround = true;
+                        gameState.hasDoubleJumped = false;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 장애물 충돌 확인
+        function checkObstacleCollisions() {
+            const playerRect = {
+                x: gameState.playerX,
+                y: window.innerHeight - gameState.playerY - 50,
+                width: 40,
+                height: 50
+            };
+
+            for (let obstacle of obstacles) {
+                const obstacleRect = {
+                    x: obstacle.x,
+                    y: window.innerHeight - obstacle.y - obstacle.height,
+                    width: obstacle.width,
+                    height: obstacle.height
+                };
+
+                if (checkCollision(playerRect, obstacleRect)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 목표 지점 도달 확인
+        function checkGoalReached() {
+            const playerRect = {
+                x: gameState.playerX,
+                y: window.innerHeight - gameState.playerY - 50,
+                width: 40,
+                height: 50
+            };
+
+            const goalRect = {
+                x: 1050,
+                y: window.innerHeight - 580,
+                width: 60,
+                height: 80
+            };
+
+            return checkCollision(playerRect, goalRect);
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+
+            // 키보드 이동 처리
+            handleMovement();
+
+            // 중력 적용
+            gameState.velocityY += gameState.gravity;
+            gameState.playerY -= gameState.velocityY;
+
+            // 플랫폼 충돌 확인
+            checkPlatformCollisions();
+
+            // 화면 밖으로 떨어짐 (한 번만 체크)
+            if (gameState.playerY < -100 && !gameState.respawning) {
+                gameState.respawning = true;
+                loseLife();
+                return;
+            }
+
+            // 장애물 충돌 확인 (한 번만 체크)
+            if (checkObstacleCollisions() && !gameState.respawning) {
+                gameState.respawning = true;
+                loseLife();
+                return;
+            }
+
+            // 목표 지점 도달 확인
+            if (checkGoalReached()) {
+                winGame();
+                return;
+            }
+
+            // 진행도 업데이트
+            gameState.progress = Math.min(100, (gameState.playerX / 1100) * 100);
+
+            // 플레이어 위치 업데이트
+            updatePlayerPosition();
+            updateUI();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 플레이어 위치 업데이트
+        function updatePlayerPosition() {
+            player.style.left = gameState.playerX + 'px';
+            player.style.bottom = gameState.playerY + 'px';
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            const hearts = '❤️'.repeat(gameState.lives) + '🤍'.repeat(gameState.maxLives - gameState.lives);
+            livesDisplay.textContent = `${hearts} 생명력: ${gameState.lives}`;
+            progressDisplay.textContent = `진행도: ${Math.round(gameState.progress)}%`;
+        }
+
+        // 움직이는 플랫폼 애니메이션
+        let platformDirection = 1;
+        function animateMovingPlatforms() {
+            const currentLeft = parseInt(movingPlatform1.style.left);
+            const newLeft = currentLeft + platformDirection * 2;
+            
+            if (newLeft > 800 || newLeft < 600) {
+                platformDirection *= -1;
+            }
+            
+            movingPlatform1.style.left = newLeft + 'px';
+            platforms[4].x = newLeft; // 플랫폼 데이터도 업데이트
+        }
+
+        // 생명력 잃기
+        function loseLife() {
+            gameState.lives--;
+            
+            if (gameState.lives <= 0) {
+                gameState.isPlaying = false;
+                gameOver.style.display = 'flex';
+            } else {
+                // 시작 위치로 즉시 리셋
+                gameState.playerX = 100;
+                gameState.playerY = 100;
+                gameState.velocityY = 0;
+                gameState.velocityX = 0;
+                gameState.isJumping = false;
+                gameState.onGround = true;
+                gameState.hasDoubleJumped = false;
+                
+                // UI와 플레이어 위치 즉시 업데이트
+                updateUI();
+                updatePlayerPosition();
+                
+                // 잠시 후 respawning 플래그 해제하고 게임 루프 재시작
+                setTimeout(() => {
+                    gameState.respawning = false;
+                    if (gameState.isPlaying) {
+                        gameLoop();
+                    }
+                }, 100);
+            }
+        }
+
+        // 게임 승리
+        function winGame() {
+            gameState.isPlaying = false;
+            victory.style.display = 'flex';
+        }
+
+        // 게임 재시작
+        function restartGame() {
+            gameOver.style.display = 'none';
+            startGame(gameState.difficulty);
+        }
+
+        // 메인 메뉴로 돌아가기
+        function backToMenu() {
+            victory.style.display = 'none';
+            gameScreen.style.display = 'none';
+            mainMenu.style.display = 'flex';
+            gameState.isPlaying = false;
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                jump();
+            }
         });
-    </script>
-</body>
-</html>
 
+        document.addEventListener('click', function(event) {
+            if (gameState.isPlaying) {
+                jump();
+            }
+        });
+
+        document.addEventListener('touchstart', function(event) {
+            if (gameState.isPlaying) {
+                event.preventDefault();
+                jump();
+            }
+        });
+
+        // 키보드 이동 (추가 기능)
+        const keys = {};
+        document.addEventListener('keydown', function(event) {
+            keys[event.code] = true;
+        });
+        
+        document.addEventListener('keyup', function(event) {
+            keys[event.code] = false;
+        });
+        
+        function handleMovement() {
+            if (!gameState.isPlaying) return;
+            
+            if (keys['ArrowLeft'] || keys['KeyA']) {
+                gameState.playerX = Math.max(0, gameState.playerX - gameState.moveSpeed);
+            }
+            if (keys['ArrowRight'] || keys['KeyD']) {
+                gameState.playerX = Math.min(window.innerWidth - 40, gameState.playerX + gameState.moveSpeed);
+            }
+        }
+
+        // 화면 크기 변경 대응
+        window.addEventListener('resize', function() {
+            // 목표 위치 재조정
+            goal.style.right = '100px';
+            goal.style.top = '50px';
+        });
+
+        // 초기 목표 위치 설정
+        goal.style.right = '100px';
+        goal.style.top = '50px';
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ad0347a1bfa2b5',t:'MTc1NDQ2NzM1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
